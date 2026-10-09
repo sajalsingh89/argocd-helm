@@ -1,0 +1,58 @@
+
+name: Validate and Package Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Chart.yaml'
+      - 'values.yaml'
+      - 'templates/**'
+      - '.helmignore'
+      - '.github/workflows/helm-chart.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Chart.yaml'
+      - 'values.yaml'
+      - 'templates/**'
+      - '.helmignore'
+      - '.github/workflows/helm-chart.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  helm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.17.3
+
+      - name: Validate Helm chart
+        run: helm lint .
+
+      - name: Render Kubernetes manifests
+        run: helm template argocd-helm . --namespace argocd-helm
+
+      - name: Package Helm chart
+        if: github.event_name != 'pull_request'
+        run: helm package . --destination ./dist
+
+      - name: Upload packaged chart
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: argocd-helm-chart
+          path: dist/*.tgz
+          if-no-files-found: error
+          retention-days: 30
