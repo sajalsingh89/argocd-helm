@@ -1,0 +1,10 @@
+
+replicaCount: 1
+
+environment: dev
+
+image:
+  tag: latest
+
+kafka:
+  bootstrapServers: kafka-dev.example.com:9092
