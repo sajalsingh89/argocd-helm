@@ -1,9 +1,7 @@
-
 apiVersion: argoproj.io/v1alpha1
 kind: Application
-
 metadata:
-  name: argocd-learning
+  name: argocd-helm
   namespace: argocd
 
 spec:
@@ -13,16 +11,12 @@ spec:
     repoURL: https://github.com/sajalsingh89/argocd-helm.git
     targetRevision: main
     path: helm/argocd-helm
-
     helm:
       releaseName: argocd-helm
-      valueFiles:
-        - values.yaml
-        - values-dev.yaml
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd-learning
+    namespace: argocd-helm
 
   syncPolicy:
     automated:
