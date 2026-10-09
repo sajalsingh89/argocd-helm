@@ -1,4 +1,4 @@
-
+```yaml
 name: Validate and Package Helm Chart
 
 on:
@@ -6,20 +6,16 @@ on:
     branches:
       - main
     paths:
-      - 'Chart.yaml'
-      - 'values.yaml'
-      - 'templates/**'
-      - '.helmignore'
+      - 'helm/argocd-helm/**'
       - '.github/workflows/helm-chart.yaml'
+
   pull_request:
     branches:
       - main
     paths:
-      - 'Chart.yaml'
-      - 'values.yaml'
-      - 'templates/**'
-      - '.helmignore'
+      - 'helm/argocd-helm/**'
       - '.github/workflows/helm-chart.yaml'
+
   workflow_dispatch:
 
 permissions:
@@ -27,6 +23,7 @@ permissions:
 
 jobs:
   helm:
+    name: Validate and Package
     runs-on: ubuntu-latest
 
     steps:
@@ -38,17 +35,25 @@ jobs:
         with:
           version: v3.17.3
 
-      - name: Validate Helm chart
-        run: helm lint .
+      - name: Check Helm version
+        run: helm version
+
+      - name: Lint Helm chart
+        run: helm lint ./helm/argocd-helm
 
       - name: Render Kubernetes manifests
-        run: helm template argocd-helm . --namespace argocd-helm
+        run: |
+          helm template argocd-helm ./helm/argocd-helm \
+            --namespace argocd-helm
 
       - name: Package Helm chart
         if: github.event_name != 'pull_request'
-        run: helm package . --destination ./dist
+        run: |
+          mkdir -p dist
+          helm package ./helm/argocd-helm \
+            --destination ./dist
 
-      - name: Upload packaged chart
+      - name: Upload packaged Helm chart
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
@@ -56,3 +61,4 @@ jobs:
           path: dist/*.tgz
           if-no-files-found: error
           retention-days: 30
+```
